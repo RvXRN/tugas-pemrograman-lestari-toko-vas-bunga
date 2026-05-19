@@ -22,7 +22,7 @@ COMPOSER_BIN="${COMPOSER_BIN:-/usr/local/bin/composer}"
 PHP_ARTISAN="sudo -u $APP_USER $PHP_BIN $APP_DIR/artisan"
 SKIP_MIGRATE=false
 SKIP_CACHE=false
-
+DEPLOY_BRANCH="api" # Kunci nama branch lu di sini biar jelas
 # ─── Warna output ─────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -67,9 +67,18 @@ $PHP_ARTISAN down --refresh=15 --retry=10 --secret="lestari-deploy-secret" \
 log_success "Maintenance mode aktif"
 
 # ─── Step 2: Git Pull ─────────────────────────────────────────────────────────
-log_info "Step 2/9 | Menarik kode terbaru dari Git..."
+# ─── Tambahkan di bagian Konfigurasi (Atas) ──────────────────────────
+
+
+# ─── Ganti Step 2 dengan ini ─────────────────────────────────────────
+# ─── Step 2: Git Pull ─────────────────────────────────────────────────
+log_info "Step 2/9 | Menarik kode terbaru dari Git (Branch: $DEPLOY_BRANCH)..."
 git fetch origin
-git reset --hard origin/main
+
+# Pastikan branch lokal tracking ke remote dengan benar sebelum di-reset
+git checkout -B "$DEPLOY_BRANCH" "origin/$DEPLOY_BRANCH" --quiet
+git reset --hard "origin/$DEPLOY_BRANCH"
+
 log_success "Kode diperbarui: $(git log --oneline -1)"
 
 # ─── Step 3: Install Dependencies ────────────────────────────────────────────
