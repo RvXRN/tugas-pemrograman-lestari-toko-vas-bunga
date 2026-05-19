@@ -61,7 +61,7 @@ fi
 # ─── Step 1b: Konfigurasi Unix Socket Redis ───────────────────────────────────
 log_info "Step 1b/7 | Konfigurasi Unix socket Redis..."
 REDIS_CONF="/etc/redis/redis.conf"
-REDIS_SOCK="/var/run/redis/redis.sock"
+REDIS_SOCK="run/redis/redis.sock"
 
 if [[ -f "$REDIS_CONF" ]]; then
     # Aktifkan Unix socket di redis.conf jika belum ada
