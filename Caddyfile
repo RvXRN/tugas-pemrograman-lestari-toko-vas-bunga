@@ -1,0 +1,72 @@
+{
+    # FrankenPHP Global Options
+    # Menonaktifkan admin endpoint untuk keamanan production
+    admin off
+
+    # Aktifkan FrankenPHP worker mode
+    frankenphp
+
+    # Jumlah thread FrankenPHP (disesuaikan via OCTANE_WORKERS di .env)
+    # Dikelola oleh php artisan octane:start, bukan config ini langsung
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTTP Server — Lestari Backend API
+# Mendengarkan di port 8000 (di belakang Nginx/reverse proxy)
+# TLS di-terminate oleh Nginx/Cloudflare, bukan di sini
+# ─────────────────────────────────────────────────────────────────────────────
+:{$OCTANE_PORT:8000} {
+
+    # Root ke folder public Laravel
+    root * /var/www/lestari/public
+
+    # Encode gzip/zstd untuk response compression
+    encode zstd br gzip
+
+    # FrankenPHP handler — semua request dihandle PHP worker
+    php_server {
+        # Matikan index.php rewrite karena Laravel sudah handle sendiri
+        resolve_root_symlink
+    }
+
+    # Logging: pisah access log dan error log
+    log {
+        output file /var/log/frankenphp/lestari-access.log {
+            roll_size 100mb
+            roll_keep 5
+        }
+        format json
+        level INFO
+    }
+
+    # Header keamanan global
+    header {
+        # Hapus header yang membocorkan info server
+        -Server
+        -X-Powered-By
+
+        # Security headers
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
+        X-XSS-Protection          "1; mode=block"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        Permissions-Policy        "camera=(), microphone=(), geolocation=()"
+
+        # Cache control untuk API (no-cache default, controller bisa override)
+        Cache-Control             "no-store, no-cache, must-revalidate"
+
+        defer
+    }
+
+    # Health check endpoint untuk load balancer / uptime monitor
+    # Tidak perlu masuk ke PHP worker
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Blok akses langsung ke file sensitif
+    @blocked {
+        path *.env *.git* *.md /storage/* /bootstrap/cache/*
+    }
+    respond @blocked 403
+}

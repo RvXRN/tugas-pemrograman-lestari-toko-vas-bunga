@@ -22,3 +22,9 @@ yarn-error.log
 /.vscode
 /.zed
 GEMINI.md
+GEMINI2.md
+*.sqlite
+*.sqlite3
+.DS_Store
+/storage/logs/*.log
+/database/database.sqlite

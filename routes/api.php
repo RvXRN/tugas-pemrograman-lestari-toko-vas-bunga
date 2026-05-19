@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Customer\CatalogController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
+use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\PaymentController;
 
 Route::prefix('v1')->middleware('throttle:api')->group(function () {
@@ -40,6 +41,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/checkout', [CheckoutController::class, 'process']);
+        
+        // Customer Dashboard Routes
+        Route::prefix('customer')->group(function () {
+            Route::get('/dashboard/stats', [CustomerDashboardController::class, 'stats']);
+        });
         
         // Admin Routes
         Route::middleware('role:admin')->prefix('admin')->group(function () {

@@ -8,6 +8,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Cache\RateLimiting\Limit;
+use Laravel\Octane\Facades\Octane;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +26,23 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! app()->isProduction());
+
+        // ─── Octane Stateless Guard ──────────────────────────────────────────
+        // KRITIS: Pastikan tidak ada state yang bocor antar request di
+        // FrankenPHP worker mode. Worker me-reuse PHP runtime, artinya
+        // static properties atau singleton yang menyimpan state request
+        // BISA terbawa ke request user berikutnya jika tidak di-flush.
+        //
+        // Guard ini mendaftarkan callback via Octane::tick() yang berjalan
+        // setiap request selesai untuk reset state berbahaya.
+        if (class_exists(Octane::class) && app()->bound('octane')) {
+            Octane::tick('stateless-check', function () {
+                // Placeholder: tambahkan reset state custom di sini jika ada
+                // Contoh: MyStaticService::reset();
+                // Contoh: SomeRepository::clearLocalCache();
+            })->immediate();
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url', 'http://localhost:3000') . '/reset-password?token=' . $token . '&email=' . $notifiable->getEmailForPasswordReset();

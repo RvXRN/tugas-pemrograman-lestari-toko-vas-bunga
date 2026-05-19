@@ -146,27 +146,45 @@ return [
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
         'options' => [
-            'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'cluster'    => env('REDIS_CLUSTER', 'redis'),
+            'prefix'     => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            // persistent=true: reuse Unix socket connection antar request
+            // KRITIS untuk Octane agar tidak buka/tutup socket setiap request
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
+        // DB 0 — koneksi umum / default
+        // Untuk Unix socket: REDIS_HOST=/var/run/redis/redis.sock, REDIS_PORT=0
         'default' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
+            'url'          => env('REDIS_URL'),
+            'host'         => env('REDIS_HOST', '127.0.0.1'),
+            'username'     => env('REDIS_USERNAME'),
+            'password'     => env('REDIS_PASSWORD'),
+            'port'         => (int) env('REDIS_PORT', '6379'),
+            'database'     => env('REDIS_DB', '0'),
+            'read_timeout' => 60,
         ],
 
+        // DB 1 — Cache store (aman untuk di-flush tanpa efek ke session)
         'cache' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
+            'url'          => env('REDIS_URL'),
+            'host'         => env('REDIS_HOST', '127.0.0.1'),
+            'username'     => env('REDIS_USERNAME'),
+            'password'     => env('REDIS_PASSWORD'),
+            'port'         => (int) env('REDIS_PORT', '6379'),
+            'database'     => env('REDIS_CACHE_DB', '1'),
+            'read_timeout' => 60,
+        ],
+
+        // DB 2 — Session store (TERPISAH dari cache, agar flush cache tidak logout user)
+        'session' => [
+            'url'          => env('REDIS_URL'),
+            'host'         => env('REDIS_HOST', '127.0.0.1'),
+            'username'     => env('REDIS_USERNAME'),
+            'password'     => env('REDIS_PASSWORD'),
+            'port'         => (int) env('REDIS_PORT', '6379'),
+            'database'     => env('REDIS_SESSION_DB', '2'),
+            'read_timeout' => 60,
         ],
 
     ],
