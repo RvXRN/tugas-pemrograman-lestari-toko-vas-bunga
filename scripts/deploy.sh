@@ -17,7 +17,7 @@ set -euo pipefail
 # ─── Konfigurasi ──────────────────────────────────────────────────────────────
 APP_DIR="/var/www/lestari"
 APP_USER="lsadm"                                          # User OLS
-PHP_BIN="${PHP_BIN:-/usr/local/lsws/lsphp83/bin/php}"    # lsphp83 OLS
+PHP_BIN="${PHP_BIN:-/usr/local/lsws/lsphp84/bin/php}"    # lsphp84 OLS
 COMPOSER_BIN="${COMPOSER_BIN:-/usr/local/bin/composer}"
 PHP_ARTISAN="sudo -u $APP_USER $PHP_BIN $APP_DIR/artisan"
 SKIP_MIGRATE=false
@@ -55,7 +55,7 @@ echo ""
 
 # ─── Validasi awal ────────────────────────────────────────────────────────────
 [[ ! -d "$APP_DIR" ]] && log_error "Direktori $APP_DIR tidak ditemukan!"
-[[ ! -f "$PHP_BIN" ]] && log_error "lsphp83 tidak ditemukan di $PHP_BIN. Pastikan OLS+lsphp83 terinstall!"
+[[ ! -f "$PHP_BIN" ]] && log_error "lsphp84 tidak ditemukan di $PHP_BIN. Pastikan OLS+lsphp84 terinstall!"
 id -u "$APP_USER" &>/dev/null || log_error "User '$APP_USER' tidak ditemukan!"
 
 cd "$APP_DIR"

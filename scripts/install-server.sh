@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # install-server.sh — First-Time Server Setup — Lestari API
-# Stack: OpenLiteSpeed 1.8.5 + lsphp83 + FrankenPHP Octane + Supervisor
+# Stack: OpenLiteSpeed 1.8.5 + lsphp84 + FrankenPHP Octane + Supervisor
 # =============================================================================
 # Usage (sebagai root):
 #   chmod +x scripts/install-server.sh
@@ -15,7 +15,7 @@ APP_DIR="/var/www/lestari"
 APP_USER="lsadm"                                         # User OLS default
 APP_GROUP="lsadm"
 LOG_DIR="/var/log/supervisor"
-LSPHP_DIR="/usr/local/lsws/lsphp83/bin"                 # Path lsphp83 OLS
+LSPHP_DIR="/usr/local/lsws/lsphp84/bin"                 # Path lsphp84 OLS
 PHP_BIN="$LSPHP_DIR/php"                                 # Binary PHP untuk artisan
 COMPOSER_BIN="/usr/local/bin/composer"
 FRANKEN_VERSION="v1.4.4"                                 # Update dari releases FrankenPHP
@@ -34,15 +34,15 @@ log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; exit 1; }
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║   Lestari API — Server Setup (OLS + lsphp83)         ║${NC}"
+echo -e "${BOLD}║   Lestari API — Server Setup (OLS + lsphp84)         ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# ─── Validasi: OLS & lsphp83 sudah terinstall ────────────────────────────────
-log_info "Validasi OLS dan lsphp83..."
-[[ ! -f "$PHP_BIN" ]] && log_error "lsphp83 tidak ditemukan di $PHP_BIN. Pastikan OLS 1.8.5 + lsphp83 sudah terinstall!"
+# ─── Validasi: OLS & lsphp84 sudah terinstall ────────────────────────────────
+log_info "Validasi OLS dan lsphp84..."
+[[ ! -f "$PHP_BIN" ]] && log_error "lsphp84 tidak ditemukan di $PHP_BIN. Pastikan OLS 1.8.5 + lsphp84 sudah terinstall!"
 [[ ! -d "/usr/local/lsws" ]] && log_error "OpenLiteSpeed tidak ditemukan di /usr/local/lsws"
-log_success "OLS dan lsphp83 ditemukan: $($PHP_BIN -r 'echo PHP_VERSION;')"
+log_success "OLS dan lsphp84 ditemukan: $($PHP_BIN -r 'echo PHP_VERSION;')"
 
 # ─── Validasi: user lsadm ─────────────────────────────────────────────────────
 id -u "$APP_USER" &>/dev/null || log_error "User '$APP_USER' tidak ditemukan. Pastikan OLS terinstall dengan benar."
@@ -119,14 +119,14 @@ else
 fi
 
 
-# Ekstensi PHP yang mungkin belum ada di lsphp83 (opsional, cek dulu)
-log_info "Cek ekstensi PHP lsphp83..."
+# Ekstensi PHP yang mungkin belum ada di lsphp84 (opsional, cek dulu)
+log_info "Cek ekstensi PHP lsphp84..."
 MISSING_EXT=()
 for ext in pdo_pgsql mbstring xml curl zip bcmath intl pcntl redis; do
-    $PHP_BIN -m 2>/dev/null | grep -q "^$ext$" || MISSING_EXT+=("lsphp83-$ext")
+    $PHP_BIN -m 2>/dev/null | grep -q "^$ext$" || MISSING_EXT+=("lsphp84-$ext")
 done
 if [[ ${#MISSING_EXT[@]} -gt 0 ]]; then
-    log_warn "Ekstensi lsphp83 yang mungkin perlu diinstall: ${MISSING_EXT[*]}"
+    log_warn "Ekstensi lsphp84 yang mungkin perlu diinstall: ${MISSING_EXT[*]}"
     log_warn "Jalankan: sudo apt-get install ${MISSING_EXT[*]}"
 else
     log_success "Semua ekstensi PHP OK"
@@ -156,7 +156,7 @@ log_info "Step 3/7 | Cek Composer..."
 if command -v composer &>/dev/null; then
     log_warn "Composer sudah ada, skip"
 else
-    log_info "Install Composer via lsphp83..."
+    log_info "Install Composer via lsphp84..."
     curl -sS https://getcomposer.org/installer | "$PHP_BIN" -- --install-dir=/usr/local/bin --filename=composer
     log_success "Composer terinstall"
 fi

@@ -142,7 +142,7 @@ return [
         ],
 
         TaskReceived::class => [
-            ...Octane::prepareApplicationForNextTask(),
+            ...Octane::prepareApplicationForNextOperation(),
         ],
 
         TaskTerminated::class => [
@@ -151,7 +151,7 @@ return [
         ],
 
         TickReceived::class => [
-            ...Octane::prepareApplicationForNextTask(),
+            ...Octane::prepareApplicationForNextOperation(),
         ],
 
         TickTerminated::class => [
