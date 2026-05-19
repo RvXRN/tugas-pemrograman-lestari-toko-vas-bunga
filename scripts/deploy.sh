@@ -80,7 +80,7 @@ git checkout -B "$DEPLOY_BRANCH" "origin/$DEPLOY_BRANCH" --quiet
 git reset --hard "origin/$DEPLOY_BRANCH"
 
 log_success "Kode diperbarui: $(git log --oneline -1)"
-
+sudo composer update
 # ─── Step 3: Install Dependencies ────────────────────────────────────────────
 log_info "Step 3/9 | Install composer dependencies (production)..."
 sudo -u "$APP_USER" $COMPOSER_BIN install \
