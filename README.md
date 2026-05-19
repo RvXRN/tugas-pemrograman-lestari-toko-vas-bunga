@@ -4,7 +4,7 @@
 [![PHP](https://img.shields.io/badge/PHP-8.3%2B-purple.svg)](https://php.net)
 [![Laravel](https://img.shields.io/badge/Laravel-12-red.svg)](https://laravel.com)
 
-> REST API untuk platform e-commerce bunga berbasis Laravel 12. Dibangun dengan arsitektur **API-Only**, menggunakan **PostgreSQL**, **RabbitMQ** (queue asinkron), dan **Laravel Reverb** (WebSocket real-time).
+> REST API & Web Frontend untuk platform e-commerce bunga berbasis Laravel 12. Dibangun dengan arsitektur **Monolithic (API + Blade Views)**, menggunakan **PostgreSQL**, **Redis** (Session & Cache), **RabbitMQ** (queue asinkron), dan **Laravel Reverb** (WebSocket real-time). Siap di-deploy menggunakan **OpenLiteSpeed & FrankenPHP (Octane)**.
 
 ---
 
@@ -23,9 +23,11 @@
   - [Admin — Kategori](#-admin--kategori)
   - [Admin — Produk](#-admin--produk)
   - [Admin — Dashboard](#-admin--dashboard)
+  - [Customer — Dashboard](#-customer--dashboard)
 - [WebSocket Real-Time](#websocket-real-time)
-- [Keamanan](#keamanan)
+- [Keamanan & Anti-Spam](#keamanan--anti-spam)
 - [Menjalankan Test](#menjalankan-test)
+- [Deployment (Production)](#deployment-production)
 
 ---
 
@@ -33,14 +35,17 @@
 
 | Layer | Teknologi |
 |---|---|
-| Framework | Laravel 12 (API-Only) |
+| Framework | Laravel 12 (API + Blade Views) |
+| Frontend | Tailwind CSS v4, Alpine.js, Spatie Honeypot |
 | Database | PostgreSQL |
-| Auth | Laravel Sanctum (Token-Based) |
+| Session & Cache | Redis (via Unix Socket) |
+| Auth | Laravel Sanctum (Token-Based & Stateful Cookie) |
 | Queue | RabbitMQ (`vladimir-yuldashev/laravel-queue-rabbitmq`) |
 | WebSocket | Laravel Reverb |
 | Pembayaran | Midtrans (Sandbox) |
 | Email | Brevo SMTP |
 | Search | PostgreSQL `pg_trgm` + GIN Index |
+| Production Server | OpenLiteSpeed + FrankenPHP (Laravel Octane) |
 
 ---
 
@@ -534,6 +539,36 @@ Statistik performa toko bulan berjalan.
 
 ---
 
+### 👤 Customer — Dashboard
+
+**Auth:** ✅ Wajib + Role `customer`
+
+#### `GET /api/v1/customer/dashboard/stats`
+Statistik personal pelanggan yang sedang login.
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "data": {
+    "total_spent": 350000,
+    "total_orders": 2,
+    "active_cart_items": 1,
+    "recent_orders": [
+      {
+        "id": "uuid",
+        "order_number": "INV-20260519-XXXX",
+        "total_amount": 150000,
+        "status": "completed",
+        "created_at": "2026-05-18T10:00:00.000000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
 ## WebSocket Real-Time
 
 Setelah memanggil `POST /api/v1/checkout`, frontend harus berlangganan ke **Private Channel** Reverb untuk menerima hasil checkout tanpa perlu refresh halaman.
@@ -590,7 +625,7 @@ echo.private(`checkout.${userId}`)
 
 ---
 
-## Keamanan
+## Keamanan & Anti-Spam
 
 API ini dilindungi oleh berbagai lapisan keamanan:
 
@@ -608,6 +643,7 @@ API ini dilindungi oleh berbagai lapisan keamanan:
 | **UUID Primary Key** | Tabel `users` dan `orders` memakai UUID untuk mencegah ID enumeration |
 | **Pessimistic Locking** | Stok produk dikunci dengan `SELECT FOR UPDATE` saat checkout concurrent |
 | **Webhook Signature** | HMAC SHA-512 diverifikasi sebelum memproses notifikasi Midtrans |
+| **Honeypot Anti-Spam** | Form frontend dilindungi oleh `spatie/laravel-honeypot` (tanpa Captcha) |
 
 ---
 
@@ -624,7 +660,7 @@ php artisan test --filter CheckoutTest
 php artisan test --filter PaymentWebhookTest
 ```
 
-**Test Suite (27 tests, 82 assertions):**
+**Test Suite (28 tests, 87 assertions):**
 
 | Test Class | Cakupan |
 |---|---|
@@ -634,10 +670,38 @@ php artisan test --filter PaymentWebhookTest
 | `AdminCategoryTest` | CRUD kategori, proteksi role |
 | `AdminProductTest` | Buat produk dengan gambar (`Storage::fake`), validasi harga negatif |
 | `AdminDashboardTest` | Stats revenue, RBAC check |
+| `CustomerDashboardTest` | Statistik personal, order history, pencegahan data kebocoran (IDOR) |
 | `CartTest` | Keranjang guest (X-Guest-Token), keranjang user login |
 | `CheckoutTest` | Dispatch `ProcessCheckoutJob` ke queue (`Queue::fake`) |
 | `PaymentWebhookTest` | Signature valid → update order, signature palsu → 403 |
 | `SecurityTest` | HTTP headers, XSS sanitization, rate limit, timing attack, IDOR |
+
+---
+
+## Deployment (Production)
+
+Proyek ini telah dikonfigurasi untuk dieksekusi di atas infrastruktur berkinerja tinggi **OpenLiteSpeed + FrankenPHP (Laravel Octane)** dengan Unix Sockets.
+
+### 1. Eksekusi Script Instalasi
+Script instalasi server (`scripts/install-server.sh`) telah disediakan untuk secara otomatis mengatur Worker Supervisor, perizinan Redis/Postgres socket, dan modul FrankenPHP.
+
+```bash
+chmod +x scripts/install-server.sh
+sudo ./scripts/install-server.sh
+```
+
+### 2. Verifikasi Process Manager
+Pastikan semua proses worker berjalan dengan lancar menggunakan `supervisorctl`:
+
+```bash
+sudo supervisorctl status
+# lestari-octane: RUNNING
+# lestari-queue: RUNNING
+# lestari-reverb: RUNNING
+# lestari-schedule: RUNNING
+```
+
+Konfigurasi virtual host OpenLiteSpeed juga disediakan pada direktori `deploy/ols/`.
 
 ---
 
